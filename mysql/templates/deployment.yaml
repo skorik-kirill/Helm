@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "mysql.fullname" . }}
+  labels:
+    app: {{ template "mysql.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  spec:
+    selector:
+      matchLabels:
+        app: {{ template "mysql.fullname" . }}
+        tier: database
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: {{ template "mysql.fullname" . }}
+          tier: database
+      spec:
+        containers:
+         - name: {{ template "mysql.fullname" . }}
+           image: "{{ .Values.image }}:{{ .Values.imageTag }}"
+           env:
+           - name: MYSQL_ROOT_PASSWORD
+             value: {{ default "" .Values.mysqlRootPassword | quote }}
+           - name: MYSQL_PASSWORD
+             value: {{default ""  .Values.mysqlPassword | quote  }}
+           - name: MYSQL_USER
+             value: {{ default ""  .Values.mysqlUser | quote }} 
+           - name: MYSQL_DATABASE
+             value: {{ default "" .Values.mysqlDatabase | quote }}
+           ports:
+           - name: mysql
+             containerPort: 3306
+           volumeMounts:
+           - name: task-pv-volume
+             mountPath: /var/lib/mysql
+        volumes:
+          - name: task-pv-storage
+            persistentVolumeClaim
+             claimName: task-pv-claim           
+          
